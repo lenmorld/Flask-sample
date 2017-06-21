@@ -63,30 +63,22 @@ function initMap() {
 
         var new_marker = new google.maps.Marker({
             position: new_marker_position,
-            // map: map,      /
+            map: map,
             title: crime.CATEGORIE ,
-            label: "A" ,
+            label: "1" ,
             html: '<div>IT WORKS!</div>'
         });
         markers.push(new_marker);
 
-        // //string for info window
-        // var infowindow = new google.maps.InfoWindow({});
+        //string for info window
+        var infowindow = new google.maps.InfoWindow({});
 
-        // //this one works - puts a listener to this current marker
-        // google.maps.event.addListener(new_marker,'click', function() {
-        //     infowindow.setContent(this.html);
-        //     infowindow.open(map, this);
-        // });
-        // }
+        //this one works - puts a listener to this current marker
+        google.maps.event.addListener(new_marker,'click', function() {
+            infowindow.setContent(this.html);
+            infowindow.open(map, this);
+        });
     }
-    // add a marker clusterer to manage the markers
-    var markerCluster = new MarkerClusterer(map, markers,
-        // {imagePath: '../static/libaries/images/m'});  
-            {
-                imagePath: "http://res.cloudinary.com/dg93kyq63/image/upload/v1497575122/m/m"
-            }
-        );
     // {% endfor %}
 };
 

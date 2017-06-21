@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 
 from flask import Flask
-from flask import render_template
+from flask import render_template, jsonify, url_for
 from models import *
 import json
 from playhouse.shortcuts import model_to_dict, dict_to_model
+from flask_jsglue import JSGlue
 
 app = Flask(__name__)
 
@@ -19,7 +20,7 @@ def index():
     	json_data.append(model_to_dict(crime))
     	ctr += 1
     	# limit results to not overload browser
-    	if(ctr > 100):
+    	if(ctr > 500):
     		break
 
     return render_template('index.html', crimes_count=crimes_count, data=json.dumps(json_data))
