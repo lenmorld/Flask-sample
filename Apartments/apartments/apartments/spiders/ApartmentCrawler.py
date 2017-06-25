@@ -8,7 +8,15 @@ from scrapy.spiders import CrawlSpider, Rule
 from scrapy.linkextractors import LinkExtractor
 from pprint import pprint
 
+from scrapy.selector import HtmlXPathSelector
+
+from lxml import etree as ET
+parser = ET.XMLParser(recover=True)
+
+
+
 class ApartmentCrawler(CrawlSpider):
+    apartments = []
     name = 'apartments'
     allowed_domains = ['kijiji.ca']
     start_urls = ['http://www.kijiji.ca/b-immobilier/grand-montreal/c34l80002?siteLocale=en_CA']
@@ -87,22 +95,61 @@ class ApartmentCrawler(CrawlSpider):
         # item = scrapy.Item()
         # quotes = response.xpath('//div[@class="quote"]/span[@class="text"]//text()').extract()
 
-        apartment = items.ApartmentsItem()
-        # apartment["url"] = response.url
-        apartment["url"] = response.xpath('//div[@data-vip-url]/@data-vip-url').extract()
-        apartment["image"] = response.xpath("//div[@data-vip-url]/div[@class='clearfix']/div/div[@class='image']/img/@src").extract()
-        apartment["price"] = response.xpath("//div[@data-vip-url]/div[@class='clearfix']/div[@class='info']/div[@class='info-container']/div[@class='price']//text()").extract()
-        apartment["title"] = response.xpath("//div[@data-vip-url]/div[@class='clearfix']/div[@class='info']/div[@class='info-container']/div[@class='title']/a//text()").extract()
-        apartment["location"] = response.xpath("//div[@data-vip-url]/div[@class='clearfix']/div[@class='info']/div[@class='info-container']/div[@class='location']//text()").extract()
-        apartment["date_posted"] = response.xpath("//div[@data-vip-url]/div[@class='clearfix']/div[@class='info']/div[@class='info-container']/div[@class='location']/span[@class='date-posted']//text()").extract()
-        apartment["desc"] = response.xpath("//div[@data-vip-url]/div[@class='clearfix']/div[@class='info']/div[@class='info-container']/div[@class='description']//text()").extract()
+        # apartment = items.ApartmentsItem()
+        # # apartment["url"] = response.url
+        # apartment["url"] = response.xpath('//div[@data-vip-url]/@data-vip-url').extract()
+        # apartment["image"] = response.xpath("//div[@data-vip-url]/div[@class='clearfix']/div/div[@class='image']/img/@src").extract()
+        # apartment["price"] = response.xpath("//div[@data-vip-url]/div[@class='clearfix']/div[@class='info']/div[@class='info-container']/div[@class='price']//text()").extract()
+        # apartment["title"] = response.xpath("//div[@data-vip-url]/div[@class='clearfix']/div[@class='info']/div[@class='info-container']/div[@class='title']/a//text()").extract()
+        # apartment["location"] = response.xpath("//div[@data-vip-url]/div[@class='clearfix']/div[@class='info']/div[@class='info-container']/div[@class='location']//text()").extract()
+        # apartment["date_posted"] = response.xpath("//div[@data-vip-url]/div[@class='clearfix']/div[@class='info']/div[@class='info-container']/div[@class='location']/span[@class='date-posted']//text()").extract()
+        # apartment["desc"] = response.xpath("//div[@data-vip-url]/div[@class='clearfix']/div[@class='info']/div[@class='info-container']/div[@class='description']//text()").extract()
 
-        print("apartment: ")
-        pprint(apartment)
+        # tree = ET.fromstring(response.body, parser)
+        # for apt in tree.xpath('//div[@data-vip-url]'):
+        #     print(apt)
+        #     print("image")
+        #     print(apt.xpath('//img/@src').extract())
+        #     input("Pause 1")
+        #     # self.apartments.append(apt)
 
-        input("PAUSE")
+        # self.apartments.append()
 
-        return apartment
+        # response.xpath('//div[@data-vip-url]/@data-vip-url').extract()
+
+
+        # print("apartment: ")
+        # pprint(apartment)
+
+        hxs = HtmlXPathSelector(response)
+        # apts_node = hxs.xpath('//div[@data-ad-id]')
+        apts_ids = hxs.xpath('//div[@data-ad-id]/@data-ad-id').extract()
+
+        # get unique attrib from this xpath to use for inside loop
+        # print(apts_node)
+
+        # might be slower but we are finally getting each apartment using its id
+        print(apts_ids)
+        for apt in apts_ids:
+            # print(hxs.xpath("//div[@class='title']/a//text()").extract())
+
+            # DOESNT WORK, still gets everything
+            # apt_node = hxs.xpath("//div[@data-ad-id='" + apt + "']")
+            # print(apt_node.xpath("//div[@class='title']/a//text()"))
+            apartment = items.ApartmentsItem()
+
+            apartment["url"] = hxs.xpath("//div[@data-ad-id='" + apt + "']/@data-vip-url").extract()
+            apartment["title"] = hxs.xpath("//div[@data-ad-id='" + apt + "']//div[@class='title']/a//text()").extract()
+
+            print(apartment)
+
+
+            # if this is slow, try this
+            # "//div[@data-ad-id='" + apt + "'][descendant::]div[@class='title']/a//text()"
+
+            input("PAUSE")
+
+        # return apartment
 
     def _extract_address(self, response):
         pass

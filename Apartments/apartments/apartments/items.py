@@ -13,6 +13,7 @@ class ApartmentsItem(scrapy.Item):
     # name = scrapy.Field()
     # pass
 
+    apt_id = scrapy.Field()
     url = scrapy.Field()
     address = scrapy.Field()
     price = scrapy.Field()
