@@ -130,6 +130,9 @@ class ApartmentCrawler(CrawlSpider):
 
         # might be slower but we are finally getting each apartment using its id
         print(apts_ids)
+
+        apartments= []
+
         for apt in apts_ids:
             # print(hxs.xpath("//div[@class='title']/a//text()").extract())
 
@@ -138,18 +141,31 @@ class ApartmentCrawler(CrawlSpider):
             # print(apt_node.xpath("//div[@class='title']/a//text()"))
             apartment = items.ApartmentsItem()
 
+            apartment["apt_id"] = apt
             apartment["url"] = hxs.xpath("//div[@data-ad-id='" + apt + "']/@data-vip-url").extract()
+            apartment["price"] = hxs.xpath("//div[@data-ad-id='" + apt + "']//div[@class='price']//text()").extract()
             apartment["title"] = hxs.xpath("//div[@data-ad-id='" + apt + "']//div[@class='title']/a//text()").extract()
+            apartment["location"] = hxs.xpath("//div[@data-ad-id='" + apt + "']//div[@class='location']//text()").extract()
+            apartment["date_posted"] = hxs.xpath("//div[@data-ad-id='" + apt + "']//span[@class='date-posted']//text()").extract()
+            apartment["desc"] = hxs.xpath("//div[@data-ad-id='" + apt + "']//div[@class='description']//text()").extract()
+            apartment["image"] = hxs.xpath("//div[@data-ad-id='" + apt + "']//div[@class='image']/img/@src").extract()
+
+            # apartment["image"] = response.xpath("//div[@data-vip-url]/div[@class='clearfix']/div/div[@class='image']/img/@src").extract()
+            # apartment["price"] = response.xpath("//div[@data-vip-url]/div[@class='clearfix']/div[@class='info']/div[@class='info-container']/div[@class='price']//text()").extract()
+            # apartment["title"] = response.xpath("//div[@data-vip-url]/div[@class='clearfix']/div[@class='info']/div[@class='info-container']/div[@class='title']/a//text()").extract()
+            # apartment["location"] = response.xpath("//div[@data-vip-url]/div[@class='clearfix']/div[@class='info']/div[@class='info-container']/div[@class='location']//text()").extract()
+            # apartment["date_posted"] = response.xpath("//div[@data-vip-url]/div[@class='clearfix']/div[@class='info']/div[@class='info-container']/div[@class='location']/span[@class='date-posted']//text()").extract()
+            # apartment["desc"] = response.xpath("//div[@data-vip-url]/div[@class='clearfix']/div[@class='info']/div[@class='info-container']/div[@class='description']//text()").extract()
 
             print(apartment)
-
+            apartments.append(apartment)
 
             # if this is slow, try this
             # "//div[@data-ad-id='" + apt + "'][descendant::]div[@class='title']/a//text()"
 
-            input("PAUSE")
+            # input("PAUSE")
 
-        # return apartment
+        return apartments
 
     def _extract_address(self, response):
         pass
