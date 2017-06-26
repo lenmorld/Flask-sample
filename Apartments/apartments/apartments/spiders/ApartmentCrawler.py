@@ -1,5 +1,8 @@
 import scrapy
 import re
+
+from twisted.spread.pb import respond
+
 from .. import items
 
 from scrapy.shell import inspect_response
@@ -8,25 +11,33 @@ from scrapy.spiders import CrawlSpider, Rule
 from scrapy.linkextractors import LinkExtractor
 from pprint import pprint
 
+from scrapy import Request
+
 from scrapy.selector import HtmlXPathSelector
 
 from lxml import etree as ET
 parser = ET.XMLParser(recover=True)
 
+from pprint import pprint
 
 
 class ApartmentCrawler(CrawlSpider):
     apartments = []
     name = 'apartments'
     allowed_domains = ['kijiji.ca']
+    base_url = 'http://www.kijiji.ca'
     start_urls = ['http://www.kijiji.ca/b-immobilier/grand-montreal/c34l80002?siteLocale=en_CA']
 
     # http://www.kijiji.ca/b-immobilier/grand-montreal/page-4/c34l80002
+    # http://www.kijiji.ca/b-immobilier/grand-montreal/page-2/c34l80002
 
     links_allowed = "http://www.kijiji.ca/b-immobilier/grand-montreal/.+"
-    links_allowed_pages = "http://www.kijiji.ca/b-immobilier/grand-montreal/.*?/page-[0-5]/.+"
+    # links_allowed_pages = "http://www.kijiji.ca/b-immobilier/grand-montreal/.*?/page-[0-5]/.+"
+    links_allowed_pages = "http://www.kijiji.ca/b-immobilier/grand-montreal/page-[0-9]/.+"
 
     # "b-immobilier/grand-montreal/c34l80002?siteLocale=en_CA"
+
+    # follow links from them (since no callback means follow=True by default).
 
     rules = [
         Rule(
@@ -36,8 +47,12 @@ class ApartmentCrawler(CrawlSpider):
         Rule(
             LinkExtractor(
                 allow=[links_allowed_pages]
-            )
-        )
+            ), callback='parse_item'),
+        # Rule(
+        #     LinkExtractor(
+        #         allow=[]
+        #     )
+        # )
     ]
 
 
@@ -95,7 +110,11 @@ class ApartmentCrawler(CrawlSpider):
         # inspect response at this point
         # inspect_response(response, self)
 
-        # self.logger.info(">>> Item page")
+        # pprint(vars(response))
+        print(response.url)
+        # input("Response")
+
+        self.logger.info(">>> Item page")
         # item = scrapy.Item()
         # quotes = response.xpath('//div[@class="quote"]/span[@class="text"]//text()').extract()
 
@@ -173,6 +192,33 @@ class ApartmentCrawler(CrawlSpider):
             apartment["apt_id"] = apt.xpath('./@data-ad-id').extract_first()
             apartment["url"] = apt.xpath("./@data-vip-url").extract_first()
 
+
+            ########## run another Request here based on crawled URLs ####
+            link = self.base_url +  apartment["url"]
+            print(">>> going to link: ", link)
+            # input("going to link")
+            new_request = Request(link, callback=self.parse_apartment_page)
+
+            item = {}
+            item["apt_id"] = apartment["apt_id"]
+            new_request.meta['item'] = item
+            yield new_request
+
+            pprint(new_request.meta['item'])
+            # input("asdas")
+
+            ### TODO! how to get item address in async way
+            # parse_apartment_page isnt called
+
+            # apartment["address"] = item["address"]
+            # OR save obtained info from spawned request
+
+            ### TODO instead of relying on parse_apartment_page to return item
+            # create class member apartments that it can manipulate directly using apt_id as primary key
+
+            ##############################################################
+
+
             # these 4 fields need to be cleaned
             apartment["price"] = self.clean_data(apt.xpath(".//div[@class='price']/text()").extract_first())
             apartment["title"] = self.clean_data(apt.xpath(".//div[@class='title']/a/text()").extract_first())
@@ -182,12 +228,35 @@ class ApartmentCrawler(CrawlSpider):
             apartment["date_posted"] = apt.xpath(".//span[@class='date-posted']/text()").extract_first()
             apartment["image"] = apt.xpath(".//div[@class='image']/img/@src").extract_first()
 
-            print(apartment)
+            # print(apartment)
             # input("PAUSE")
 
             apartments.append(apartment)
 
         return apartments
 
-    def _extract_address(self, response):
-        pass
+    def parse_apartment_page(self, response):
+        hxs = HtmlXPathSelector(response)
+        print("parse specific apartment page")
+        # apt_id = response.meta["apt_id"]
+        # process page
+
+        item = response.meta["item"]
+        apt_id = item["apt_id"]
+
+        # address
+        # //th[ . = 'Address']/following-sibling::td//text()
+        address = hxs.xpath("//th[ . = 'Address']/following-sibling::td//text()").extract()
+        if address is None:
+            item["address"] = "None"
+        else:
+            item["address"] = address
+
+        print("ADDRESS", item["address"])
+        # input("address")
+
+        yield item
+
+        
+        ### TODO instead of relying on parse_apartment_page to return item
+        # create class member apartments that it can manipulate directly using apt_id as primary key
