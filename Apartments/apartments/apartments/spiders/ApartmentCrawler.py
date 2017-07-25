@@ -257,6 +257,6 @@ class ApartmentCrawler(CrawlSpider):
 
         yield item
 
-        
+
         ### TODO instead of relying on parse_apartment_page to return item
         # create class member apartments that it can manipulate directly using apt_id as primary key
