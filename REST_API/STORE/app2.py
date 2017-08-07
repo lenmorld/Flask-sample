@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, render_template
 
 
 app = Flask(__name__)
@@ -21,6 +21,15 @@ stores = [
                 'price': 22.50
             }
         ]
+    },
+    {
+        'name': 'My Store With Spaces',
+        'items': [
+            {
+                'name': 'Item A1',
+                'price': 50.99
+            }
+        ]
     }
 ]
 
@@ -34,6 +43,12 @@ stores = [
 # GET /store
 # POST /store/<string:name>/item {name: , price}
 # GET /store/<string:name>/item
+
+
+#HOME PAGE
+@app.route('/')
+def home():
+    return render_template('index.html')            # index.html should be in templates folder
 
 
 # POST /store data: {name:}
