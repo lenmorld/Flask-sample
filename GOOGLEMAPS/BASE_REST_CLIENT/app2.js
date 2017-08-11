@@ -1,6 +1,7 @@
 var app = angular.module('app',[]);
 // var RESOUCE_URL = 'https://jsonplaceholder.typicode.com/posts/1/comments';
 var RESOUCE_URL = 'https://api.myjson.com/bins/t99hh';
+// RESOUCE_URL = 'http://127.0.0.1:9402/apartments';
 
 app.controller('MyCtrl', ['$scope','MySvc', function($scope, MySvc) {
 	// on init, load marker points from JSON file
@@ -21,13 +22,21 @@ app.controller('MyCtrl', ['$scope','MySvc', function($scope, MySvc) {
 
 }]);
 
+// var config = {headers:  {
+// 		'Access-Control-Allow-Origin': '*'
+//     }
+// };
+
+
 app.service('MySvc', ['$http', '$q', function($http, $q) {
 	this.fetchPoints = function() {
+		// return $http.get(RESOUCE_URL, config);
 		return $http.get(RESOUCE_URL);
 	};
 
 
 	this.fetchAddressPoints = function() {
+		// return $http.get(RESOUCE_URL, config);
 		return $http.get(RESOUCE_URL);
 	};
 
