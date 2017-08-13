@@ -21,6 +21,9 @@ import requests
 import sys
 import urllib
 
+import json
+
+
 
 # This client code can run on Python 2.x or 3.x.  Your imports can be
 # simpler if you only need one of those.
@@ -39,6 +42,8 @@ except ImportError:
 # OAuth credential placeholders that must be filled in by users.
 # You can find them on
 # https://www.yelp.com/developers/v3/manage_app
+
+# account: FB lenmorvash
 CLIENT_ID = "-ROW3Z41z0_6YaBedG-K-Q"
 CLIENT_SECRET = "4IhYRp6YEVrbPySqhgjG0UcwcL4fQ0gaiqpHus2F8HeLMombCBreehtQvMQtkiqp"
 
@@ -52,9 +57,13 @@ GRANT_TYPE = 'client_credentials'
 
 
 # Defaults for our simple example.
-DEFAULT_TERM = 'dinner'
-DEFAULT_LOCATION = 'San Francisco, CA'
-SEARCH_LIMIT = 3
+# DEFAULT_TERM = 'dinner'
+DEFAULT_TERM = ""
+# DEFAULT_LOCATION = 'San Francisco, CA'
+DEFAULT_LOCATION = 'Montreal'
+SEARCH_LIMIT = 50
+
+DEFAULT_RADIUS = 300
 
 
 def obtain_bearer_token(host, path):
@@ -109,7 +118,7 @@ def request(host, path, bearer_token, url_params=None):
     return response.json()
 
 
-def search(bearer_token, term, location):
+def search(bearer_token, term, location, name, lat , long):
     """Query the Search API by a search term and location.
     Args:
         term (str): The search term passed to the API.
@@ -118,11 +127,24 @@ def search(bearer_token, term, location):
         dict: The JSON response from the request.
     """
 
+    # https://www.yelp.ca/developers/documentation/v3/business_search
+    # term is optional
+
     url_params = {
-        'term': term.replace(' ', '+'),
-        'location': location.replace(' ', '+'),
+        # 'term': term.replace(' ', '+'),
+        # 'location': location.replace(' ', '+'),
         'limit': SEARCH_LIMIT
     }
+
+    if len(term) > 0:
+        url_params['term'] = term.replace(' ', '+')
+
+    url_params['latitude'] = lat
+    url_params['longitude'] = long
+    url_params['radius'] = DEFAULT_RADIUS
+
+    pprint.pprint(url_params)
+
     return request(API_HOST, SEARCH_PATH, bearer_token, url_params=url_params)
 
 
@@ -138,7 +160,7 @@ def get_business(bearer_token, business_id):
     return request(API_HOST, business_path, bearer_token)
 
 
-def query_api(term, location):
+def query_api(term, location, name, lat, long):
     """Queries the API by the input values from the user.
     Args:
         term (str): The search term to query.
@@ -146,23 +168,31 @@ def query_api(term, location):
     """
     bearer_token = obtain_bearer_token(API_HOST, TOKEN_PATH)
 
-    response = search(bearer_token, term, location)
+    response = search(bearer_token, term, location, name, lat, long)
 
     businesses = response.get('businesses')
+
+    # pprint.pprint(businesses)
+    # input()
 
     if not businesses:
         print(u'No businesses for {0} in {1} found.'.format(term, location))
         return
 
+    print(u'{0} businesses found in {1}: {2}, {3}'.format(len(businesses), name, lat, long))
+
+    return len(businesses)
+
+    # querying each indiv business, we dont need this for now =============================
     business_id = businesses[0]['id']
 
-    print(u'{0} businesses found, querying business info ' \
-        'for the top result "{1}" ...'.format(
-            len(businesses), business_id))
-    response = get_business(bearer_token, business_id)
-
-    print(u'Result for business "{0}" found:'.format(business_id))
-    pprint.pprint(response, indent=2)
+    # print(u'{0} businesses found, querying business info ' \
+    #     'for the top result "{1}" ...'.format(
+    #         len(businesses), business_id))
+    # response = get_business(bearer_token, business_id)
+    #
+    # print(u'Result for business "{0}" found:'.format(business_id))
+    # pprint.pprint(response, indent=2)
 
 
 def main():
@@ -176,8 +206,22 @@ def main():
 
     input_values = parser.parse_args()
 
+    #############################################
+    # load JSON file here
+    with open('apts.json') as apt_file:
+        data = json.load(apt_file)
+    #############################################
+
     try:
-        query_api(input_values.term, input_values.location)
+        # query_api(input_values.term, input_values.location)
+
+        for apt in data:
+            # add number of places to data
+            apt['places'] = query_api(input_values.term, input_values.location, apt['url'], apt['LAT'], apt['LONG'])
+
+        with open('apts.json', 'w') as fp:
+            json.dump(data, fp)
+
     except HTTPError as error:
         sys.exit(
             'Encountered HTTP error {0} on {1}:\n {2}\nAbort program.'.format(
