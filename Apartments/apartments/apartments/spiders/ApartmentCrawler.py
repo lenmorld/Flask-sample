@@ -122,6 +122,8 @@ class ApartmentCrawler(CrawlSpider):
             ### SOLUTION CHOSEN: pass entire apartment object to 2nd Request, item yielded now contains all attribs including
             # address to be parsed from the individual page
 
+            # return apartment
+
             ##############################################################
 
         # return self.apartments        # return not needed with yield
@@ -129,6 +131,9 @@ class ApartmentCrawler(CrawlSpider):
 
     def parse_apartment_page(self, response):
         hxs = HtmlXPathSelector(response)
+
+        # inspect_response(response, self)  # inspect response at this point
+
         # print("parse specific apartment page")
 
         item = response.meta["item"]
@@ -136,7 +141,12 @@ class ApartmentCrawler(CrawlSpider):
 
         # address
         # //th[ . = 'Address']/following-sibling::td//text()
-        address = hxs.xpath("//th[ . = 'Address']/following-sibling::td//text()").extract()
+        # address = hxs.xpath("//th[ . = 'Address']/following-sibling::td//text()").extract()
+
+        # kijiji changed their main page layout
+        address = hxs.xpath(".//span[contains(@class, 'address')]/text()").extract()
+        print(address)
+
         if address is None:
             item["address"] = "None"
         else:
