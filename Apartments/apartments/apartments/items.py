@@ -24,3 +24,5 @@ class ApartmentsItem(scrapy.Item):
     title = scrapy.Field()
     image = scrapy.Field()
     location = scrapy.Field()
+    LAT = scrapy.Field()
+    LONG = scrapy.Field()

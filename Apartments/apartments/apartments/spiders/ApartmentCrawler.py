@@ -2,6 +2,8 @@ import scrapy
 import re
 
 from twisted.spread.pb import respond
+import unicodedata, string, requests
+
 
 from .. import items
 
@@ -55,10 +57,23 @@ class ApartmentCrawler(CrawlSpider):
         # )
     ]
 
-    def clean_data(self, string):
+    """
+    
+    """
+    def convert_french_accents(self, data):
+        # return ''.join(x for x in unicodedata.normalize('NFKD', data) if (x in string.ascii_letters or x in string.digits or x in string.whitespace or x in string.punctuation))
+        # return string.encode('ascii', 'xmlcharrefreplace')
+
+        # string.printable = ascii_letters, digits, whitespace, punctuation
+        return ''.join(x for x in unicodedata.normalize('NFKD', data) if (x in string.printable))
+
+    def clean_data(self, data):
+        # [",", "\n", "\r", ";", "\\"]
+
         for unneeded in ['\n', '\r']:
-            string = string.replace(unneeded, "")
-        return string.strip()       # remove leading and trailing spaces
+            data = data.replace(unneeded, "")
+
+        return self.convert_french_accents(data.strip())       # remove leading and trailing spaces
 
 
     def parse_item(self, response):
@@ -112,7 +127,6 @@ class ApartmentCrawler(CrawlSpider):
 
             ### TODO! how to get item address in async way
             # parse_apartment_page isnt called
-
             # apartment["address"] = item["address"]
             # OR save obtained info from spawned request
 
@@ -121,11 +135,8 @@ class ApartmentCrawler(CrawlSpider):
 
             ### SOLUTION CHOSEN: pass entire apartment object to 2nd Request, item yielded now contains all attribs including
             # address to be parsed from the individual page
-
             # return apartment
-
             ##############################################################
-
         # return self.apartments        # return not needed with yield
 
 
@@ -150,8 +161,41 @@ class ApartmentCrawler(CrawlSpider):
         if address is None:
             item["address"] = "None"
         else:
+            address = self.convert_french_accents(address[0])
             item["address"] = address
+            ########## GEOCODING can be done here ##################
+            item['LAT'], item['LONG'] = self.geocode_address(address)
 
         # self.apartments[apt_id]["address"] = address
 
         yield item
+
+    def geocode_address(self, address):
+
+        # address = self.convert_french_accents(address)        # done in parse_apartment_page already
+
+        try:
+            # form URL with address in it
+
+            # "http://maps.googleapis.com/maps/api/geocode/json?sensor=false&address=91-30 METROPOLITAN AVENUE,  QUEENS, NY"
+            url = "http://maps.googleapis.com/maps/api/geocode/json?sensor=false&address={}".format(address)
+
+            # request URL
+            response = requests.get(url)
+
+            # examine JSON, e.g {u'lat': 40.7135296, u'lng': -73.9856844}
+            # print(response.json())
+            coords = response.json()['results'][0]['geometry']['location']
+
+            # assign lat, lang to school object
+            latitude = coords['lat']
+            longitude = coords['lng']
+
+            print("{} is at {}, {}".format(address, latitude, longitude))
+
+        except:
+            print(">> failed geocoding for {}".format(address))
+
+        return latitude, longitude
+
+
