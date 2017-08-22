@@ -51,7 +51,7 @@ function initMap() {
     // console.log(data);
     // console.log(crimes);
 
-    
+
 
     // {% for crime in crimes %}
     for (var i in crimes)
@@ -82,7 +82,7 @@ function initMap() {
     }
     // add a marker clusterer to manage the markers
     var markerCluster = new MarkerClusterer(map, markers,
-        // {imagePath: '../static/libaries/images/m'});  
+        // {imagePath: '../static/libaries/images/m'});
             {
                 imagePath: "http://res.cloudinary.com/dg93kyq63/image/upload/v1497575122/m/m"
             }
