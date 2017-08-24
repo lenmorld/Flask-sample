@@ -26,3 +26,4 @@ class ApartmentsItem(scrapy.Item):
     location = scrapy.Field()
     LAT = scrapy.Field()
     LONG = scrapy.Field()
+    places = scrapy.Field()

@@ -2,7 +2,12 @@ import scrapy
 import re
 
 from twisted.spread.pb import respond
-import unicodedata, string, requests
+import unicodedata, string
+
+
+# post processing modules - googlemaps, places(yelp), ...
+from ..postprocess import googlemaps
+from ..postprocess import search_places
 
 
 from .. import items
@@ -163,39 +168,23 @@ class ApartmentCrawler(CrawlSpider):
         else:
             address = self.convert_french_accents(address[0])
             item["address"] = address
+
             ########## GEOCODING can be done here ##################
-            item['LAT'], item['LONG'] = self.geocode_address(address)
+            lat, long = googlemaps.geocode_address(address)
+            item['LAT'] = lat
+            item['LONG'] = long
+
+            ########## Do Places search here #######################
+            term = ""       # e.g. bar
+            location = ""   # e.g. Montreal
+            url = item["url"]
+
+            item['places'] = search_places.get_num_places(term, location, lat, long, url)
 
         # self.apartments[apt_id]["address"] = address
 
         yield item
 
-    def geocode_address(self, address):
 
-        # address = self.convert_french_accents(address)        # done in parse_apartment_page already
-
-        try:
-            # form URL with address in it
-
-            # "http://maps.googleapis.com/maps/api/geocode/json?sensor=false&address=91-30 METROPOLITAN AVENUE,  QUEENS, NY"
-            url = "http://maps.googleapis.com/maps/api/geocode/json?sensor=false&address={}".format(address)
-
-            # request URL
-            response = requests.get(url)
-
-            # examine JSON, e.g {u'lat': 40.7135296, u'lng': -73.9856844}
-            # print(response.json())
-            coords = response.json()['results'][0]['geometry']['location']
-
-            # assign lat, lang to school object
-            latitude = coords['lat']
-            longitude = coords['lng']
-
-            print("{} is at {}, {}".format(address, latitude, longitude))
-
-        except:
-            print(">> failed geocoding for {}".format(address))
-
-        return latitude, longitude
 
 

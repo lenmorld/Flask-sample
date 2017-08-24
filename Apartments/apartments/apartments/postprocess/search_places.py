@@ -195,35 +195,14 @@ def query_api(term, location, name, lat, long):
     # pprint.pprint(response, indent=2)
 
 
-def main():
-    parser = argparse.ArgumentParser()
-
-    parser.add_argument('-q', '--term', dest='term', default=DEFAULT_TERM,
-                        type=str, help='Search term (default: %(default)s)')
-    parser.add_argument('-l', '--location', dest='location',
-                        default=DEFAULT_LOCATION, type=str,
-                        help='Search location (default: %(default)s)')
-
-    input_values = parser.parse_args()
-
-    #############################################
-    # load JSON file here
-    with open('apts.json') as apt_file:
-        data = json.load(apt_file)
-    #############################################
+def get_num_places(term, location, lat, long, url):
+    # `python sample.py --term="bars" --location="San Francisco, CA"`
 
     try:
-        # query_api(input_values.term, input_values.location)
-
-        for apt in data:
-            # add number of places to data
-            apt['places'] = query_api(input_values.term, input_values.location, apt['url'], apt['LAT'], apt['LONG'])
-
-        with open('apts.json', 'w') as fp:
-            json.dump(data, fp)
+        num_places = query_api(term, location, url, lat, long)
 
     except HTTPError as error:
-        sys.exit(
+        print(
             'Encountered HTTP error {0} on {1}:\n {2}\nAbort program.'.format(
                 error.code,
                 error.url,
@@ -231,6 +210,6 @@ def main():
             )
         )
 
+        num_places = 0
 
-if __name__ == '__main__':
-    main()
+    return num_places
