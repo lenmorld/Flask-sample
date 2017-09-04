@@ -17,7 +17,6 @@ with open('apartments.json') as apt_file:
 # pprint(data)
 # print(data[0]['LAT'])
 
-
 @app.route('/')
 def home():
     # return "<div>Hello world of HTML</div>"
