@@ -31,11 +31,15 @@ import pandas as pd
 import requests
 import pprint
 
-CSV_FILE = 'crimes3.csv'
+CSV_FILE = 'crimes.csv'
 CRIME_PER_BOROUGH_FILE = 'crime_per_borough.json'
-MAPQUEST_KEY = 'faOSrQi0CXGBeBA6Ri3rkp4cVJK7J7sG'
+# MAPQUEST_KEY = 'faOSrQi0CXGBeBA6Ri3rkp4cVJK7J7sG'         # lenmorvash1- crime-data-1
+# MAPQUEST_KEY = 'aDpAAl2NvQw9kg1ibfm0g1mwujU6uKPL'           # lenmorvash1- my app
+# MAPQUEST_KEY = 'UGgf9EsWAuJwxTJud3sP4ROHTiKfrTy1'              # lizone - crime-data-2
+MAPQUEST_KEY = 'N61Xllm8693poAb5eGdyQlOeei5o9htF'                    # crime-data-3
 
 df = pd.read_csv(CSV_FILE, encoding="ISO-8859-1")
+# df = pd.read_csv(CSV_FILE, encoding="utf-8")
 fieldnames = ("CATEGORIE", "DATE", "QUART", "PDQ", "X", "Y", "LAT", "LONG")
 
 boroughs = pd.read_json(CRIME_PER_BOROUGH_FILE, typ='series')       # series better for scalar values
@@ -53,6 +57,7 @@ def reverse_geocode_address(lat, long):
 
         # MapQuest 15k per month, for 75k rows, 5 rounds(accounts)
         url = "http://open.mapquestapi.com/geocoding/v1/reverse?key={}&location={},{}".format(MAPQUEST_KEY, lat, long)
+        # print(url)
         response = requests.get(url)
         response_json = response.json()
 
@@ -158,7 +163,8 @@ print(df)
 
 # default is overwrite whole file
 CRIME_FILE_ALT = 'crimes_out.csv'
-df.to_csv(CSV_FILE, encoding='ISO-8859-1', index=False)
+# df.to_csv(CSV_FILE, encoding='ISO-8859-1', index=False)
+df.to_csv(CSV_FILE, encoding="utf-8", index=False)
 
 # write boroughs file
 
