@@ -36,7 +36,9 @@ CRIME_PER_BOROUGH_FILE = 'crime_per_borough.json'
 # MAPQUEST_KEY = 'faOSrQi0CXGBeBA6Ri3rkp4cVJK7J7sG'         # lenmorvash1- crime-data-1
 # MAPQUEST_KEY = 'aDpAAl2NvQw9kg1ibfm0g1mwujU6uKPL'           # lenmorvash1- my app
 # MAPQUEST_KEY = 'UGgf9EsWAuJwxTJud3sP4ROHTiKfrTy1'              # lizone - crime-data-2
-MAPQUEST_KEY = 'N61Xllm8693poAb5eGdyQlOeei5o9htF'                    # crime-data-3
+# MAPQUEST_KEY = 'N61Xllm8693poAb5eGdyQlOeei5o9htF'                    # crime-data-3
+# MAPQUEST_KEY = 'TYCHAZGsbgGauuPQjhh1JDEhGIGl55gK'                    # lenmorvash11 myapp
+MAPQUEST_KEY = 'RGbHZnX14kvMioUFFaRFpRoZfZ6SRmU2'                   # myapp2
 
 df = pd.read_csv(CSV_FILE, encoding="ISO-8859-1")
 # df = pd.read_csv(CSV_FILE, encoding="utf-8")
@@ -113,7 +115,7 @@ for index, row in df.iterrows():
         continue
 
     try:
-        if not pd.isnull(row['POSTAL']):
+        if not pd.isnull(row['POSTAL']) and not row['POSTAL'] == 'INV':
         # if row['POSTAL'] != 0:
             print("Already good")
             continue
