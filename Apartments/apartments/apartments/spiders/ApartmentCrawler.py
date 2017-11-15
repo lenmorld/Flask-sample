@@ -184,7 +184,3 @@ class ApartmentCrawler(CrawlSpider):
         # self.apartments[apt_id]["address"] = address
 
         yield item
-
-
-
-
